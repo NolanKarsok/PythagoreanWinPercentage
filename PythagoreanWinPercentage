@@ -1,0 +1,21 @@
+#load required packages
+library(Lahman)
+library(dplyr)
+library(ggplot2)
+
+# create dataframe from Teams table with subset of columns for analysis. Filter for just 2019 AL to highlight and capture the performance of the Red Sox
+data <- Teams %>% select(yearID,lgID,teamID,W,L,R,RA) %>%
+  filter(yearID==2019) %>%
+# use mutate function to create a Pythagorean Win Expectation function (Runs^2 / (Runs^2 + RunsAllowed^2)), multipled by total games to get Expected Win Percentage  
+  mutate(ExpectedWinPercentage=R^2/(R^2+RA^2),ExpectedWins=round(ExpectedWinPercentage*(W+L)), difference=W-ExpectedWins)
+
+# Plot data points and add regression line
+ggplot(data,aes(ExpectedWins,W)) + 
+  ylab("ActualWins") + 
+  ggtitle("2019 Pythagorean Win Expectation") + 
+  stat_smooth(method="lm") +
+  geom_point()
+
+# Show the predictive power of this model for the 2019 season by running a regression on the data
+regression <- lm(W~ExpectedWins, data=data)
+summary(regression)
